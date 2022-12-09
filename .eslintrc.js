@@ -11,6 +11,7 @@ module.exports = defineConfig({
     'eslint:recommended',
     'plugin:vue/vue3-recommended',
     'plugin:@typescript-eslint/recommended',
+    // 'airbnb-typescript/base'
   ],
   settings: {
     'import/resolver': {
@@ -41,6 +42,7 @@ module.exports = defineConfig({
       parser: 'vue-eslint-parser',
       parserOptions: {
         parser: '@typescript-eslint/parser',
+        project: ['./tsconfig.json'],
         extraFileExtensions: ['.vue'],
         ecmaVersion: 'latest',
         ecmaFeatures: {
@@ -49,4 +51,11 @@ module.exports = defineConfig({
       },
     },
   ],
+  rules: {
+    semi: ['error', 'never'],
+    quotes: ['error', 'single'],
+    '@typescript-eslint/consistent-type-imports': ['error', {
+      fixStyle: 'separate-type-imports' // 类型引入单独使用import type形式
+    }]
+  }
 })
