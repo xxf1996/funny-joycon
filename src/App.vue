@@ -1,5 +1,6 @@
 <template>
   <div class="app">
+    <ControllerIndex />
     <RouterView />
   </div>
 </template>
