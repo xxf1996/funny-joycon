@@ -17,6 +17,11 @@ export class JoyConEvent extends EventTarget {
     const prevStatus = this.buttonStatus[name] ?? false
     this.buttonStatus[name] = status
     if (status === prevStatus) {
+      if (status) { // 持续按压状态
+        this.dispatchEvent(new CustomEvent<string>('keypress', {
+          detail: name
+        }))
+      }
       return
     }
     if (prevStatus === false && status === true) {

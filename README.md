@@ -1,3 +1,7 @@
+[TOC]
+
+
+
 ## 关于
 
 利用`joy-con`和[WebHID API](https://wicg.github.io/webhid/)尝试做一些有意思的交互；这里正好有人封装了一个基于`WebHID API`来连接`joy-con`设备的库：
@@ -25,3 +29,108 @@
   <img src="http://pic.xiexuefeng.cc/markdown/image-20221209162042204.png?imageslim" alt="image-20221209162042204" style="zoom:50%;" />
 
 - 
+
+### hidinput 事件
+
+该事件为`HID`设备传送数据的事件，当`HID`设备（即`joycon`手柄）发生**状态变化**时（如按钮触发，`IMU`传感器数据变化等）会触发该事件，利用该事件的数据就可以进一步判断当前的输入；
+
+该事件是一个`CustomEvent`，其`detail`字段主要的包含的数据如下（完整数据可以参考源码[^1]）：
+
+```typescript
+/** 主要输入数据 */
+interface CommonInput {
+  /** 平滑后（三个原始采样数据平均）的加速度计数据 */
+  actualAccelerometer: CommonVector
+  /**
+   * 平滑后的陀螺仪数据
+   * https://learn.sparkfun.com/tutorials/gyroscope/all
+   */
+  actualGyroscope: {
+    /** degrees per second (°/s)  */
+    dps: CommonVector
+    /** revolutions per second */
+    rps: CommonVector
+  }
+  /** 平滑后的设备朝向数据 */
+  actualOrientation: CommonQuaternion
+  actualOrientationQuaternion: CommonQuaternion
+  quaternion: Quaternion
+}
+```
+
+由于左右两个`joycon`的按钮功能不同，所以专门用来记录按钮按压状态的`buttonStatus`字段根据左右各不相同，如：
+
+```typescript
+/** left joy-con 按钮状态；key为按钮名称，value为是否处于按压 */
+export interface LeftButtonStatus {
+  capture: boolean
+  chargingGrip: boolean
+  down: boolean
+  l: boolean
+  left: boolean
+  leftStick: boolean
+  minus: boolean
+  right: boolean
+  sl: boolean
+  sr: boolean
+  up: boolean
+  zl: boolean
+}
+
+/** left joy-con 输入数据 */
+export interface LeftInput extends CommonInput {
+  /** 按钮状态 */
+  buttonStatus: LeftButtonStatus
+}
+```
+
+
+
+### rumble
+
+这是一个封装了向`joycon`发送震动指令的方法：
+
+<img src="http://pic.xiexuefeng.cc/markdown/image-20221212165040437.png?imageslim" alt="image-20221212165040437" style="zoom:50%;" />
+
+
+
+## 操作识别
+
+### 布尔按钮
+
+根据`joycon`的设计可知，除了摇杆以外的按钮都是一个布尔状态；不过实际中使用的时候直接用按钮的布尔状态实在是不太方便，因此这里可以参照`DOM`为键盘设计的事件，将按键按压过程分为`keydown`、`keypress`和`keyup`三个阶段：
+
+```mermaid
+graph LR;
+	A[按钮状态: false];
+	B[按钮状态: true];
+	A --> keydown --> B --> keypress --> keyup --> A;
+```
+
+这里只需要记录上一个`hidinput`当中的每个按钮的状态，然后在当前`hidinput`事件处理时对比一下之前的按钮状态即可完成上述三种事件的转化；
+
+
+
+### 摇杆
+
+#### 精确方向
+
+
+
+#### 轴方向
+
+
+
+### 体感控制
+
+#### 固定方向晃动
+
+
+
+
+
+
+
+
+
+[^1]: [joy-con-webhid/parse.js at main · tomayac/joy-con-webhid](https://github.com/tomayac/joy-con-webhid/blob/main/src/parse.js)
