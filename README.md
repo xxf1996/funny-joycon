@@ -86,6 +86,12 @@ export interface LeftInput extends CommonInput {
 
 
 
+#### actualOrientation
+
+可以推断这里的数据应该类似于[RelativeOrientationSensor](https://developer.mozilla.org/en-US/docs/Web/API/RelativeOrientationSensor)（理由就是实测设备旋转后静止数据会回归初始状态，因此应该不是一个绝对的朝向），是一种设备朝向的旋转数据，三个分量应该就是欧拉角，从库的实例源码[^2]可以得知欧拉角的顺序为$(z, x, y)$；
+
+- [如何通俗地解释欧拉角？之后为何要引入四元数？ - 大脸怪的回答 - 知乎](https://www.zhihu.com/question/47736315/answer/236808639)：比较详细的讲解了欧拉角和四元数的区别，以及各种欧拉角和四元数的基本性质等
+
 ### rumble
 
 这是一个封装了向`joycon`发送震动指令的方法：
@@ -129,8 +135,19 @@ graph LR;
 
 
 
+### 特定手势
+
+- [(PDF) Gesture Recognition with a Wii Controller](https://www.researchgate.net/publication/30012906_Gesture_Recognition_with_a_Wii_Controller)：基于机器学习的思路对加速度传感器数据进行筛选、分类，最终得到一个最接近的手势；
+
+
+
+## 相关
+
+[redphx/joydance: Use Joy-Cons to play Ubisoft's Just Dance on all platforms](https://github.com/redphx/joydance)：一个基于python的库，原理也是利用HID协议连接joycon获取其数据，并转发到舞力全开软件
+
 
 
 
 
 [^1]: [joy-con-webhid/parse.js at main · tomayac/joy-con-webhid](https://github.com/tomayac/joy-con-webhid/blob/main/src/parse.js)
+[^2]: https://github.com/tomayac/joy-con-webhid/blob/518a5d34d585e1844b6daf42310b975ab2631835/demo/style.css#L112
