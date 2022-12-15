@@ -23,6 +23,18 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/demos/snake')
       }
     ]
+  },
+  {
+    path: '/test',
+    name: 'test',
+    component: () => import('@/layout/DemoLayout.vue'),
+    children: [
+      {
+        path: 'tf-2d',
+        name: 'tf-2d',
+        component: () => import('@/tests/tf-2d')
+      }
+    ]
   }
 ]
 const router = createRouter({
