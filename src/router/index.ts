@@ -33,6 +33,11 @@ const routes: RouteRecordRaw[] = [
         path: 'tf-2d',
         name: 'tf-2d',
         component: () => import('@/tests/tf-2d')
+      },
+      {
+        path: 'tf-cnn',
+        name: 'tf-cnn',
+        component: () => import('@/tests/tf-cnn')
       }
     ]
   }
