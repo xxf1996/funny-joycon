@@ -48,6 +48,11 @@ const routes: RouteRecordRaw[] = [
         path: 'similarity',
         name: 'similarity',
         component: () => import('@/tests/similarity')
+      },
+      {
+        path: 'posture-similarity',
+        name: 'posture-similarity',
+        component: () => import('@/tests/posture-similarity')
       }
     ]
   }

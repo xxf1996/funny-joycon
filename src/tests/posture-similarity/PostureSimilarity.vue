@@ -1,7 +1,7 @@
 <template>
   <div class="text-center">
     <h3 class="mb-8">
-      相似度计算测试 - 第{{ no }}次
+      手势相似度测试 - 第{{ no }}次
     </h3>
     <p
       v-if="started"
@@ -15,24 +15,31 @@
     >
       已结束
     </p>
-    <p>余弦相似度：{{ similarity }}</p>
+    <p>square: {{ similarity.square }}</p>
+    <p>circle: {{ similarity.circle }}</p>
+    <p>star: {{ similarity.star }}</p>
   </div>
 </template>
 
 <script lang="ts" setup>
-/**
- * 基于余项相似度计算手势运动之间的匹配程度，目前看来还是可行的；
- * 参考：https://zhuanlan.zhihu.com/p/33164335 
- */
+import square from '@/assets/data/square.json'
+import circle from '@/assets/data/circle.json'
+import star from '@/assets/data/star.json'
+import { cosineSimilarity, sampleData } from '@/utils/math'
 import { rightEvent } from '@/plugins/joy-con'
 import type { CommonInput, CommonVector } from '@/typings/joy-con'
-import { sampleData, cosineSimilarity } from '@/utils/math'
+
+const squareData = sampleData(square)
+const circleData = sampleData(circle)
+const starData = sampleData(star)
+const similarity = reactive({
+  square: 0,
+  circle: 0,
+  star: 0
+})
 
 const no = ref(0)
 const started = ref(false)
-const target: CommonVector[] = []
-const similarity = ref(0)
-const SAMPLE_NUM = 100
 let curRecord: CommonVector[] = []
 
 function toggleStart() {
@@ -40,25 +47,18 @@ function toggleStart() {
     no.value += 1
     curRecord = []
   } else {
-    if (no.value === 1) {
-      console.log('原始数据：', curRecord)
-      target.push(...sampleData(curRecord, SAMPLE_NUM)) // 将第一次录入数据作为目标手势参考数据
-      console.log('目标数据：', target)
-    } else {
-      computeSimilarity()
-    }
+    computeSimilarity()
   }
 
   started.value = !started.value
 }
 
 function computeSimilarity() {
-  if (target.length === 0 || curRecord.length === 0) {
-    return
-  }
-  const data = sampleData(curRecord, SAMPLE_NUM)
+  const data = sampleData(curRecord)
   console.log('当前采样：', data)
-  similarity.value = cosineSimilarity(target, data)
+  similarity.square = cosineSimilarity(squareData, data)
+  similarity.circle = cosineSimilarity(circleData, data)
+  similarity.star = cosineSimilarity(starData, data)
 }
 
 rightEvent.addEventListener('sensor-input', e => {
