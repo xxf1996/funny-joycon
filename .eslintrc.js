@@ -56,6 +56,7 @@ module.exports = defineConfig({
     quotes: ['error', 'single'],
     '@typescript-eslint/consistent-type-imports': ['error', {
       fixStyle: 'separate-type-imports' // 类型引入单独使用import type形式
-    }]
+    }],
+    indent: ['error', 2]
   }
 })

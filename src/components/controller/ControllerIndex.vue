@@ -17,9 +17,13 @@
 </template>
 
 <script lang="ts" setup>
-import { leftConnected, rightConnected, connect, leftEvent } from '@/plugins/joy-con'
+import { leftConnected, rightConnected, connect, leftEvent, checkJoyCon } from '@/plugins/joy-con'
 
 leftEvent.addEventListener('keydown', (e) => {
   console.log(e)
+})
+
+onMounted(() => {
+  setTimeout(checkJoyCon, 2000) // 检测当前是否已经有joycon进行连接了
 })
 </script>

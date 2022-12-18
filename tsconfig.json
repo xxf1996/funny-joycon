@@ -22,7 +22,8 @@
       ],
     },
     "types": [
-      "p5"
+      "p5",
+      "naive-ui/volar"
     ]
   },
   "include": [

@@ -1,4 +1,5 @@
-import type { JoyConType, LeftButtonStatus, LeftInput } from '@/typings/joy-con'
+import type { CommonInput, JoyConType, LeftButtonStatus, LeftInput } from '@/typings/joy-con'
+import { omit } from 'lodash-es'
 
 export class JoyConEvent extends EventTarget {
   private buttonStatus: Record<string, boolean> = {}
@@ -11,6 +12,13 @@ export class JoyConEvent extends EventTarget {
     for (const buttonName in detail.buttonStatus) {
       this.hanldeSimpleButton(buttonName, detail.buttonStatus[buttonName as keyof LeftButtonStatus])
     }
+    this.handleSensorData(detail)
+  }
+
+  private handleSensorData(inputData: LeftInput) {
+    this.dispatchEvent(new CustomEvent<CommonInput>('sensor-input', {
+      detail: omit(inputData, ['buttonStatus'])
+    }))
   }
 
   private hanldeSimpleButton(name: string, status: boolean) {

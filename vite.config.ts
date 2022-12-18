@@ -4,6 +4,7 @@ import Unocss from 'unocss/vite'
 import transformerDirectives from '@unocss/transformer-directives'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
+import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import path from 'path'
 
 // https://vitejs.dev/config/
@@ -16,10 +17,20 @@ export default defineConfig({
       ]
     }),
     AutoImport({
-      imports: ['vue', 'vue-router']
+      imports: ['vue', 'vue-router', {
+        'naive-ui': [
+          'useDialog',
+          'useMessage',
+          'useNotification',
+          'useLoadingBar'
+        ]
+      }]
     }),
     Components({
-      dirs: ['./src/components']
+      dirs: ['./src/components'],
+      resolvers: [
+        NaiveUiResolver()
+      ]
     })
   ],
   server: {

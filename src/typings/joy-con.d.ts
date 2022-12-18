@@ -16,10 +16,10 @@ export interface LeftButtonStatus {
   zl: boolean
 }
 
-interface CommonVector {
-  x: number
-  y: number
-  z: number
+interface CommonVector<T = number> {
+  x: T
+  y: T
+  z: T
 }
 
 interface Quaternion {
@@ -36,7 +36,9 @@ interface CommonQuaternion {
 }
 
 /** 主要输入数据 */
-interface CommonInput {
+export interface CommonInput {
+  /** 三个原始采样数据平均 */
+  accelerometers: CommonVector<{ acc: number }>[]
   /** 平滑后（三个原始采样数据平均）的加速度计数据 */
   actualAccelerometer: CommonVector
   /**

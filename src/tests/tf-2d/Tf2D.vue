@@ -18,14 +18,14 @@ interface TestData {
  * Get the car data reduced to just the variables we are interested
  * and cleaned of missing data.
  */
- async function getData() {
+async function getData() {
   const carsDataResponse = await fetch('https://storage.googleapis.com/tfjs-tutorials/carsData.json')
   const carsData = await carsDataResponse.json()
   const cleaned: TestData[] = carsData.map(car => ({
     mpg: car.Miles_per_Gallon,
     horsepower: car.Horsepower,
   }))
-  .filter(car => (car.mpg != null && car.horsepower != null))
+    .filter(car => (car.mpg != null && car.horsepower != null))
 
   return cleaned
 }
@@ -52,7 +52,7 @@ function createModel() {
  * the data and _normalizing_ the data
  * MPG on the y-axis.
  */
- function convertToTensor(data: TestData[]) {
+function convertToTensor(data: TestData[]) {
   // Wrapping these calculations in a tidy will dispose any
   // intermediate tensors.
 
