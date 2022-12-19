@@ -37,7 +37,7 @@ interface CommonQuaternion {
 
 /** 主要输入数据 */
 export interface CommonInput {
-  /** 三个原始采样数据平均 */
+  /** 三个原始采样数据平均；这里的加速度单位应该是g，而不是m/s2 */
   accelerometers: CommonVector<{ acc: number }>[]
   /** 平滑后（三个原始采样数据平均）的加速度计数据 */
   actualAccelerometer: CommonVector

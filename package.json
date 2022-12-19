@@ -13,6 +13,7 @@
   "dependencies": {
     "@tensorflow/tfjs": "^4.1.0",
     "@tensorflow/tfjs-vis": "^1.5.1",
+    "echarts": "^5.4.1",
     "joy-con-webhid": "^0.4.0",
     "lodash-es": "^4.17.21",
     "naive-ui": "^2.34.2",

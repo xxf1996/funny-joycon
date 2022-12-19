@@ -29,30 +29,30 @@ leftEvent.addEventListener('keydown', e => {
     return
   }
   const { detail } = e as CustomEvent<string>
-    switch(detail) {
-      case 'zl':
-        sketch.keyCode = 32
-        sketch.keyPressed()
-        break
-      case 'left':
-        sketch.keyCode = 37
-        sketch.keyPressed()
-        break
-      case 'right':
-        sketch.keyCode = 39
-        sketch.keyPressed()
-        break
-      case 'up':
-        sketch.keyCode = 38
-        sketch.keyPressed()
-        break
-      case 'down':
-        sketch.keyCode = 40
-        sketch.keyPressed()
-        break
-      default:
-        break
-    }
+  switch(detail) {
+  case 'zl':
+    sketch.keyCode = 32
+    sketch.keyPressed()
+    break
+  case 'left':
+    sketch.keyCode = 37
+    sketch.keyPressed()
+    break
+  case 'right':
+    sketch.keyCode = 39
+    sketch.keyPressed()
+    break
+  case 'up':
+    sketch.keyCode = 38
+    sketch.keyPressed()
+    break
+  case 'down':
+    sketch.keyCode = 40
+    sketch.keyPressed()
+    break
+  default:
+    break
+  }
 })
 </script>
 

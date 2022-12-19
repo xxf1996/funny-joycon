@@ -1,5 +1,5 @@
 import type { CommonVector } from '@/typings/joy-con'
-import { ceil, floor, sum } from 'lodash-es'
+import { ceil, floor, sum, map } from 'lodash-es'
 
 export function reMap(start: number, end: number, k: number) {
   const delta = end - start
@@ -30,13 +30,10 @@ export function vectorsToNums(list: CommonVector[]): number[] {
   return list.map(item => [item.x, item.y, item.z]).flat()
 }
 
-/** 计算两组向量的余弦相似度 */
-export function cosineSimilarity(a: CommonVector[], b: CommonVector[]) {
-  if (a.length !== b.length) {
+export function cosineSimilarityForList(listA: number[], listB: number[]) {
+  if (listA.length !== listB.length) {
     return 0
   }
-  const listA = vectorsToNums(a)
-  const listB = vectorsToNums(b)
   const lengthA = Math.sqrt(sum(listA.map(n => n ** 2)))
   const lengthB = Math.sqrt(sum(listB.map(n => n ** 2)))
   const sumAB = sum(listA.map((n, idx) => n * listB[idx]))
@@ -46,4 +43,18 @@ export function cosineSimilarity(a: CommonVector[], b: CommonVector[]) {
   }
 
   return sumAB / (lengthA * lengthB)
+}
+
+/** 计算两组向量的余弦相似度 */
+export function cosineSimilarity(a: CommonVector[], b: CommonVector[]) {
+  if (a.length !== b.length) {
+    return 0
+  }
+
+  // 分别计算三个加速度分量上的相似度应该更准确？
+  const x = cosineSimilarityForList(map(a, 'x'), map(b, 'x'))
+  const y = cosineSimilarityForList(map(a, 'y'), map(b, 'y'))
+  const z = cosineSimilarityForList(map(a, 'z'), map(b, 'z'))
+
+  return x * y * z
 }

@@ -137,7 +137,37 @@ graph LR;
 
 ### 特定手势
 
+
+
+#### 基于机器学习/神经网络的方法
+
 - [(PDF) Gesture Recognition with a Wii Controller](https://www.researchgate.net/publication/30012906_Gesture_Recognition_with_a_Wii_Controller)：基于机器学习的思路对加速度传感器数据进行筛选、分类，最终得到一个最接近的手势；
+
+
+
+
+
+#### 基于余弦相似度的方法[^3]
+
+1. 记录特定手势从开始到结束动作期间的传感器数据；
+2. 可以对上述传感器数据做一个**固定数量**的采样（相同数量的样本数据方便进行计算）；
+3. 对用户实时动作数据（从开始到结束期间）进行同样的采样，然后使用余弦相似度计算方法匹配各个预先记录的特定手势，查看最接近的相似度以及相似度是否足够高（因为可能不匹配任何手势的数据）；
+
+
+
+#### 如何从一段持续的传感器数据中匹配手势数据？
+
+特征提取？
+
+- [（超详细）语音信号处理之特征提取_BarbaraChow的博客-CSDN博客_语音信号特征提取](https://blog.csdn.net/qq_36002089/article/details/126849445)
+
+或者简单的设置起始点阈值？
+
+
+
+### IK
+
+- [【游戏开发】逆向运动学（IK）详解 - 知乎](https://zhuanlan.zhihu.com/p/499405167)
 
 
 
@@ -151,3 +181,4 @@ graph LR;
 
 [^1]: [joy-con-webhid/parse.js at main · tomayac/joy-con-webhid](https://github.com/tomayac/joy-con-webhid/blob/main/src/parse.js)
 [^2]: https://github.com/tomayac/joy-con-webhid/blob/518a5d34d585e1844b6daf42310b975ab2631835/demo/style.css#L112
+[^3]: [推荐算法入门（1）相似度计算方法大全 - 知乎](https://zhuanlan.zhihu.com/p/33164335)

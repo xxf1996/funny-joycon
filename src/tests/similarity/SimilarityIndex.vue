@@ -32,7 +32,7 @@ const no = ref(0)
 const started = ref(false)
 const target: CommonVector[] = []
 const similarity = ref(0)
-const SAMPLE_NUM = 100
+const SAMPLE_NUM = 200
 let curRecord: CommonVector[] = []
 
 function toggleStart() {
