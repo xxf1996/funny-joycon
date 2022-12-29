@@ -21,6 +21,11 @@ const routes: RouteRecordRaw[] = [
         path: 'snake',
         name: 'snake',
         component: () => import('@/demos/snake')
+      },
+      {
+        path: 'ping-pong',
+        name: 'ping-pong',
+        component: () => import('@/demos/ping-pong')
       }
     ]
   },

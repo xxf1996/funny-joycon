@@ -7,5 +7,6 @@ docs/components.d.ts
 coverage
 ssr-testing/cases/*
 src/plugins/joy-con-webhid
+src/plugins/ammo/*
 components.d.ts
 auto-imports.d.ts

@@ -23,7 +23,8 @@
     },
     "types": [
       "p5",
-      "naive-ui/volar"
+      "naive-ui/volar",
+      "three"
     ]
   },
   "include": [

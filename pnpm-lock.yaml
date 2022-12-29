@@ -6,6 +6,7 @@ specifiers:
   '@types/lodash-es': ^4.17.6
   '@types/node': ^18.11.12
   '@types/p5': ^1.4.3
+  '@types/three': ^0.146.0
   '@typescript-eslint/eslint-plugin': ^5.46.0
   '@typescript-eslint/parser': ^5.46.0
   '@unocss/transformer-directives': ^0.47.5
@@ -22,6 +23,7 @@ specifiers:
   lodash-es: ^4.17.21
   naive-ui: ^2.34.2
   p5: ^1.5.0
+  three: ^0.148.0
   typescript: ^4.6.4
   unocss: ^0.47.5
   unplugin-auto-import: ^0.12.0
@@ -39,6 +41,7 @@ dependencies:
   lodash-es: 4.17.21
   naive-ui: 2.34.2_vue@3.2.45
   p5: 1.5.0
+  three: 0.148.0
   vue: 3.2.45
   vue-router: 4.1.6_vue@3.2.45
 
@@ -46,6 +49,7 @@ devDependencies:
   '@types/lodash-es': 4.17.6
   '@types/node': 18.11.12
   '@types/p5': 1.4.3
+  '@types/three': 0.146.0
   '@typescript-eslint/eslint-plugin': 5.46.0_5mle7isnkfgjmrghnnczirv6iy
   '@typescript-eslint/parser': 5.46.0_ha6vam6werchizxrnqvarmz2zu
   '@unocss/transformer-directives': 0.47.5
@@ -577,9 +581,19 @@ packages:
     resolution: {integrity: sha512-21cFJr9z3g5dW8B0CVI9g2O9beqaThGQ6ZFBqHfwhzLDKUxaqTIy3vnfah/UPkfOiF2pLq+tGz+W8RyCskuslw==}
     dev: true
 
+  /@types/three/0.146.0:
+    resolution: {integrity: sha512-75AgysUrIvTCB054eQa2pDVFurfeFW8CrMQjpzjt3yHBfuuknoSvvsESd/3EhQxPrz9si3+P0wiDUVsWUlljfA==}
+    dependencies:
+      '@types/webxr': 0.5.0
+    dev: true
+
   /@types/webgl-ext/0.0.30:
     resolution: {integrity: sha512-LKVgNmBxN0BbljJrVUwkxwRYqzsAEPcZOe6S2T6ZaBDIrFp0qu4FNlpc5sM1tGbXUYFgdVQIoeLk1Y1UoblyEg==}
     dev: false
+
+  /@types/webxr/0.5.0:
+    resolution: {integrity: sha512-IUMDPSXnYIbEO2IereEFcgcqfDREOgmbGqtrMpVPpACTU6pltYLwHgVkrnYv0XhWEcjio9sYEfIEzgn3c7nDqA==}
+    dev: true
 
   /@typescript-eslint/eslint-plugin/5.46.0_5mle7isnkfgjmrghnnczirv6iy:
     resolution: {integrity: sha512-QrZqaIOzJAjv0sfjY4EjbXUi3ZOFpKfzntx22gPGr9pmFcTjcFw/1sS1LJhEubfAGwuLjNrPV0rH+D1/XZFy7Q==}
@@ -3860,6 +3874,10 @@ packages:
   /text-table/0.2.0:
     resolution: {integrity: sha512-N+8UisAXDGk8PFXP4HAzVR9nbfmVJ3zYLAWiTIoqC5v5isinhr+r5uaO8+7r3BMfuNIufIsA7RdpVgacC2cSpw==}
     dev: true
+
+  /three/0.148.0:
+    resolution: {integrity: sha512-8uzVV+qhTPi0bOFs/3te3RW6hb3urL8jYEl6irjCWo/l6sr8MPNMcClFev/MMYeIxr0gmDcoXTy/8LXh/LXkfw==}
+    dev: false
 
   /through/2.3.8:
     resolution: {integrity: sha512-w89qg7PI8wAdvX60bMDP+bFoD5Dvhm9oLheFp5O4a2QF0cSBGsBX4qZmadPMvVqlLJBBci+WqGGOAPvcDeNSVg==}
