@@ -26,6 +26,10 @@ let physicsWorld: any
 let transformAux1: any
 let ball: Mesh
 let box: Mesh
+let bottom: Mesh
+let prevDistance = Number.MAX_SAFE_INTEGER
+let curDistance = Number.MAX_SAFE_INTEGER
+let collisionCallback: any
 
 const camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000)
 const scene = new Scene()
@@ -48,8 +52,9 @@ const control = new OrbitControls(camera, renderer.domElement)
 function loop () {
   const deltaTime = clock.getDelta()
   updatePhysics(deltaTime)
+  checkCollision()
   control.update()
-  camera.lookAt(box.position)
+  camera.lookAt(ball.position)
   renderer.render(scene, camera)
   requestAnimationFrame(loop)
 }
@@ -101,9 +106,9 @@ function initRoom() {
   top.receiveShadow = true
   createRigidBody(top, topShape, 0, top.position, top.quaternion)
 
-  const bottom = new Mesh(
+  bottom = new Mesh(
     new BoxGeometry(sx, 0.1, sz),
-    new MeshPhongMaterial({ color: 0xcccccc, side: DoubleSide })
+    new MeshPhongMaterial({ color: 0x80BDF1, side: DoubleSide })
   )
   const bottomShape = new Ammo.btBoxShape( new Ammo.btVector3(sx * 0.5, 0.1 * 0.5, sz * 0.5) )
   bottom.position.set(0, -sy * 0.5, 0)
@@ -129,6 +134,43 @@ function initRoom() {
   createRigidBody(back, backShape, 0, back.position, back.quaternion)
 }
 
+function initCollisionCallback() {
+  let afterCollision = false
+  const ballBody = ball.userData.physicsBody
+  collisionCallback = new Ammo.ConcreteContactResultCallback()
+  // 经测试，该回调函数并不会在每次调用contactPairTest方法都会被触发，一般是在两个物体接近碰撞的时候才会触发……
+  collisionCallback.addSingleResult = (cp: any, colObj0Wrap: any, partId0: any, index0: any, colObj1Wrap: any, partId1: any, index1: any) => {
+    const contactPoint = Ammo.wrapPointer( cp, Ammo.btManifoldPoint )
+    prevDistance = curDistance
+    curDistance = contactPoint.getDistance()
+
+    if (curDistance > 0) {
+      if (afterCollision && curDistance < prevDistance) {
+        console.log('发力')
+        setTimeout(() => {
+          const v = ballBody.getLinearVelocity()
+          v.op_mul(-1.3)
+          ballBody.setLinearVelocity(v)
+        }, 30)
+        afterCollision = false
+      }
+      return
+    }
+
+    afterCollision = true
+    console.log('碰撞')
+  }
+}
+
+/**
+ * 检查两个物体间的碰撞情况，参考自：https://medium.com/@bluemagnificent/collision-detection-in-javascript-3d-physics-using-ammo-js-and-three-js-31a5569291ef 
+ */
+function checkCollision() {
+  const ballBody = ball.userData.physicsBody
+  physicsWorld.contactPairTest(ballBody, bottom.userData.physicsBody, collisionCallback)
+  // console.log('当前距离：', curDistance)
+}
+
 function initObject() {
   initRoom()
   ball = new Mesh(
@@ -137,20 +179,21 @@ function initObject() {
   )
   const ballShape = new Ammo.btSphereShape( 0.2 )
   ballShape.setMargin(MARGIN)
-  ball.position.set(0, 3, 0)
+  ball.position.set(0, -1, 8)
   ball.castShadow = true
   box = new Mesh(
     new BoxGeometry(1, 1, 1),
     new MeshPhongMaterial({ color: 0xFF4A26 })
   )
+  box.position.set(-8, 0, -5)
   const boxShape = new Ammo.btBoxShape(new Ammo.btVector3(1 * 0.5, 1 * 0.5, 1 * 0.5))
   boxShape.setMargin(MARGIN)
   box.castShadow = true
 
-  createRigidBody(ball, ballShape, 1, ball.position, ball.quaternion, (ballBody) => {
-    ballBody.setRestitution(0.8) // 碰撞后补偿系数，系数越大越容易反弹
+  createRigidBody(ball, ballShape, 2, ball.position, ball.quaternion, (ballBody) => {
+    ballBody.setRestitution(0.95) // 碰撞后补偿系数，系数越大越容易反弹
     ballBody.setLinearVelocity(
-      new Ammo.btVector3(3, 5, -6)
+      new Ammo.btVector3(3, -5, -12)
     )
     console.log(ballBody)
   })
@@ -273,6 +316,7 @@ onMounted(async () => {
   initPhysics()
   initObject()
   initEvent()
+  initCollisionCallback()
   loop()
 })
 </script>
