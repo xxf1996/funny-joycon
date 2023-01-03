@@ -30,6 +30,7 @@ let bottom: Mesh
 let prevDistance = Number.MAX_SAFE_INTEGER
 let curDistance = Number.MAX_SAFE_INTEGER
 let collisionCallback: any
+let afterCollision = false
 
 const camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000)
 const scene = new Scene()
@@ -134,6 +135,23 @@ function initRoom() {
   createRigidBody(back, backShape, 0, back.position, back.quaternion)
 }
 
+/**
+ * 基于AABB计算球体和地板的表面距离
+ */
+function getBallAndFloorDistance() {
+  const ballBody = ball.userData.physicsBody
+  const floorBody = bottom.userData.physicsBody
+  const ballMin = new Ammo.btVector3(0, 0, 0)
+  const ballMax = new Ammo.btVector3(0, 0, 0)
+  const floorMin = new Ammo.btVector3(0, 0, 0)
+  const floorMax = new Ammo.btVector3(0, 0, 0)
+
+  ballBody.getAabb(ballMin, ballMax)
+  floorBody.getAabb(floorMin, floorMax)
+
+  return ballMin.y() - floorMax.y()
+}
+
 function initCollisionCallback() {
   let afterCollision = false
   const ballBody = ball.userData.physicsBody
@@ -158,7 +176,7 @@ function initCollisionCallback() {
     }
 
     afterCollision = true
-    console.log('碰撞')
+    console.log('碰撞', getBallAndFloorDistance())
   }
 }
 
@@ -167,8 +185,27 @@ function initCollisionCallback() {
  */
 function checkCollision() {
   const ballBody = ball.userData.physicsBody
-  physicsWorld.contactPairTest(ballBody, bottom.userData.physicsBody, collisionCallback)
+  // physicsWorld.contactPairTest(ballBody, bottom.userData.physicsBody, collisionCallback)
   // console.log('当前距离：', curDistance)
+
+  curDistance = getBallAndFloorDistance()
+
+  if (curDistance > 0) {
+    if (afterCollision && curDistance < prevDistance) {
+      console.log('发力')
+      setTimeout(() => {
+        const v = ballBody.getLinearVelocity()
+        v.op_mul(-1.2)
+        v.setY(v.x() + random(1.5, 5.5, true))
+        ballBody.setLinearVelocity(v)
+      }, 500)
+      afterCollision = false
+    }
+    return
+  }
+
+  afterCollision = true
+  console.log('碰撞', getBallAndFloorDistance())
 }
 
 function initObject() {
