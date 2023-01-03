@@ -100,6 +100,14 @@ export interface LeftInput extends CommonInput {
 
 
 
+### 关于传感器噪声
+
+由于`IMU`传感器本身就有各种噪声，因此需要知道该库传出的传感器数据是否为校准过的，以便后续的数据处理；从[源码](https://github.com/tomayac/joy-con-webhid/blob/518a5d34d585e1844b6daf42310b975ab2631835/src/parse.js#L145)可以看出，该库本身只是对原始数据进行了还原[^5]，并没有进行校准；
+
+不过仔细查看其借鉴的`joycon`逆向工程留下的[文档](https://github.com/dekuNukem/Nintendo_Switch_Reverse_Engineering/blob/master/imu_sensor_notes.md)可以发现里面提供了传感器相关的噪声范围以及相应的校准公式，值得参考；
+
+
+
 ## 操作识别
 
 ### 布尔按钮
@@ -191,3 +199,4 @@ graph LR;
 [^2]: https://github.com/tomayac/joy-con-webhid/blob/518a5d34d585e1844b6daf42310b975ab2631835/demo/style.css#L112
 [^3]: [推荐算法入门（1）相似度计算方法大全 - 知乎](https://zhuanlan.zhihu.com/p/33164335)
 [^4]: [TypeError: WebAssembly.instantiate():Import #0 module="a" error :module is not an object or function · Issue #15853 · emscripten-core/emscripten](https://github.com/emscripten-core/emscripten/issues/15853)
+[^5]: https://github.com/dekuNukem/Nintendo_Switch_Reverse_Engineering/blob/master/imu_sensor_notes.md#accelerometer---acceleration-in-g
