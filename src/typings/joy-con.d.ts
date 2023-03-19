@@ -29,10 +29,11 @@ interface Quaternion {
   w: number
 }
 
-interface CommonQuaternion {
-  alpha: string
-  beta: string
-  gamma: string
+interface CommonQuaternion<T = string> {
+  /** 保留6位小数的字符串，用了toFixed */
+  alpha: T
+  beta: T
+  gamma: T
 }
 
 /** 主要输入数据 */
@@ -53,6 +54,7 @@ export interface CommonInput {
   }
   /** 平滑后的设备朝向数据 */
   actualOrientation: CommonQuaternion
+  customOrientation: CommonQuaternion
   actualOrientationQuaternion: CommonQuaternion
   quaternion: Quaternion
 }

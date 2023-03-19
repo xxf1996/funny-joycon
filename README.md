@@ -86,6 +86,26 @@ export interface LeftInput extends CommonInput {
 
 
 
+#### joycon 加速度计轴
+
+![alt text](http://pic.xiexuefeng.cc/markdown/687474703a2f2f6374636165722e636f6d2f7769692f7377697463682f6a6f79636f6e5f6163632d6779726f5f6c656674322e706e67.png?imageslim)
+
+![alt text](http://pic.xiexuefeng.cc/markdown/687474703a2f2f6374636165722e636f6d2f7769692f7377697463682f6a6f79636f6e5f6163632d6779726f5f7269676874322e706e67.png?imageslim)
+
+如图[^6]所示，`joycon`加速度计的轴遵循上面的右手定则分布；
+
+
+
+#### 加速度计的重力影响
+
+由于`joycon`的加速度计本身并没有消除重力影响，因此正常的读数会受重力的影响；
+
+<img src="http://pic.xiexuefeng.cc/markdown/image-20230319192935562.png?imageslim" alt="image-20230319192935562" style="zoom:50%;" />
+
+上图就是右手柄在**正面朝上**的静止状态下测量的加速度读数，可以看到在$-z$方向有一个`g`的力，但实际上根据加速度计的轴分布，按理说重力应该作用在$+z$轴上？不过这里应该是加速度计的原理导致的，毕竟静止状态合力应该为`0`，因此加速度计的内部实际上有一个`-g`的力？
+
+
+
 #### actualOrientation
 
 可以推断这里的数据应该类似于[RelativeOrientationSensor](https://developer.mozilla.org/en-US/docs/Web/API/RelativeOrientationSensor)（理由就是实测设备旋转后静止数据会回归初始状态，因此应该不是一个绝对的朝向），是一种设备朝向的旋转数据，三个分量应该就是欧拉角，从库的实例源码[^2]可以得知欧拉角的顺序为$(z, x, y)$；
@@ -200,3 +220,4 @@ graph LR;
 [^3]: [推荐算法入门（1）相似度计算方法大全 - 知乎](https://zhuanlan.zhihu.com/p/33164335)
 [^4]: [TypeError: WebAssembly.instantiate():Import #0 module="a" error :module is not an object or function · Issue #15853 · emscripten-core/emscripten](https://github.com/emscripten-core/emscripten/issues/15853)
 [^5]: https://github.com/dekuNukem/Nintendo_Switch_Reverse_Engineering/blob/master/imu_sensor_notes.md#accelerometer---acceleration-in-g
+[^6]: https://github.com/dekuNukem/Nintendo_Switch_Reverse_Engineering/blob/master/imu_sensor_notes.md#axes-definition

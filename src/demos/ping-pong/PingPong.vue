@@ -353,7 +353,7 @@ onMounted(async () => {
   initPhysics()
   initObject()
   initEvent()
-  initCollisionCallback()
+  // initCollisionCallback()
   loop()
 })
 </script>

@@ -56,19 +56,37 @@ echarts.use([
 
 const lines: NonNullable<LineSeriesOption>[] = [
   {
-    name: 'x',
+    name: 'x(原始值)',
     type: 'line',
     symbol: 'none',
     data: []
   },
   {
-    name: 'y',
+    name: 'y(原始值)',
     type: 'line',
     symbol: 'none',
     data: []
   },
   {
-    name: 'z',
+    name: 'z(原始值)',
+    type: 'line',
+    symbol: 'none',
+    data: []
+  },
+  {
+    name: 'x(玩家坐标系)',
+    type: 'line',
+    symbol: 'none',
+    data: []
+  },
+  {
+    name: 'y(玩家坐标系)',
+    type: 'line',
+    symbol: 'none',
+    data: []
+  },
+  {
+    name: 'z(玩家坐标系)',
     type: 'line',
     symbol: 'none',
     data: []
@@ -117,6 +135,9 @@ function toggleStart() {
     lines[0].data = map(curRecord, 'x').map((val, idx) => [idx, val])
     lines[1].data = map(curRecord, 'y').map((val, idx) => [idx, val])
     lines[2].data = map(curRecord, 'z').map((val, idx) => [idx, val])
+    lines[3].data = lines[1].data!.slice(0) // y -> x
+    lines[4].data = lines[0].data!.slice(0) // x -> y
+    lines[5].data = lines[2].data!.map((val: any) => [val[0], -val[1] - 1]) // -z -> z（加上重力影响）
     chartInstance?.setOption<ECOption>({
       series: lines
     })
@@ -143,6 +164,8 @@ rightEvent.addEventListener('sensor-input', e => {
     y: y.acc,
     z: z.acc
   })))
+  // const { rps } = detail.actualGyroscope
+  // curRecord.push(rps)
 })
 
 rightEvent.addEventListener('keydown', e => {
