@@ -42,7 +42,9 @@ import { LineChart } from 'echarts/charts'
 import type { TooltipComponentOption, GridComponentOption, LegendComponentOption } from 'echarts/components'
 import { TooltipComponent, GridComponent, LegendComponent } from 'echarts/components'
 import { SVGRenderer } from 'echarts/renderers'
-import { map } from 'lodash-es'
+import { map, pick } from 'lodash-es'
+import { Euler, Vector3 } from 'three'
+import { degToRad } from 'three/src/math/MathUtils'
 
 type ECOption = echarts.ComposeOption<LineSeriesOption | TooltipComponentOption | GridComponentOption | LegendComponentOption>
 
@@ -135,6 +137,7 @@ function toggleStart() {
     lines[0].data = map(curRecord, 'x').map((val, idx) => [idx, val])
     lines[1].data = map(curRecord, 'y').map((val, idx) => [idx, val])
     lines[2].data = map(curRecord, 'z').map((val, idx) => [idx, val])
+    // 用户坐标系：右手为x轴，正前方为y轴，头顶为z轴
     lines[3].data = lines[1].data!.slice(0) // y -> x
     lines[4].data = lines[0].data!.slice(0) // x -> y
     lines[5].data = lines[2].data!.map((val: any) => [val[0], -val[1] - 1]) // -z -> z（加上重力影响）
@@ -159,11 +162,22 @@ rightEvent.addEventListener('sensor-input', e => {
     return
   }
   const { detail } = e as CustomEvent<CommonInput>
-  curRecord.push(...detail.accelerometers.map(({ x, y, z }) => ({
-    x: x.acc,
-    y: y.acc,
-    z: z.acc
-  })))
+  const { customOrientation } = detail
+  const euler = customOrientation
+    ? new Euler(
+      degToRad(-Number(customOrientation.alpha)),
+      degToRad(-Number(customOrientation.beta)),
+      degToRad(-Number(customOrientation.gamma)),
+      'ZXY'
+    ) // 将逆变换为初始朝向下坐标系的值
+    : new Euler()
+  curRecord.push(...detail.accelerometers.map(({ x, y, z }) => {
+    const acc = new Vector3(x.acc, y.acc, z.acc)
+
+    acc.applyEuler(euler)
+    
+    return pick(acc, ['x', 'y', 'z'])
+  }))
   // const { rps } = detail.actualGyroscope
   // curRecord.push(rps)
 })

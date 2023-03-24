@@ -42,6 +42,8 @@ export interface CommonInput {
   accelerometers: CommonVector<{ acc: number }>[]
   /** 平滑后（三个原始采样数据平均）的加速度计数据 */
   actualAccelerometer: CommonVector
+  /** 用户坐标系下的加速度计数据 */
+  userAcceleration: CommonVector
   /**
    * 平滑后的陀螺仪数据
    * https://learn.sparkfun.com/tutorials/gyroscope/all
@@ -54,6 +56,7 @@ export interface CommonInput {
   }
   /** 平滑后的设备朝向数据 */
   actualOrientation: CommonQuaternion
+  /** 修正后的设备朝向数据（当设备静止时不再平滑朝向数据） */
   customOrientation: CommonQuaternion
   actualOrientationQuaternion: CommonQuaternion
   quaternion: Quaternion

@@ -55,7 +55,7 @@ function loop () {
   updatePhysics(deltaTime)
   checkCollision()
   control.update()
-  camera.lookAt(ball.position)
+  camera.lookAt(box.position)
   renderer.render(scene, camera)
   requestAnimationFrame(loop)
 }
@@ -275,17 +275,17 @@ function initEvent() {
   })
 
   rightEvent.addEventListener('sensor-input', e => {
-    const { detail } = e as CustomEvent<CommonInput>
-    if (!detail.actualAccelerometer) {
+    const { detail: { userAcceleration } } = e as CustomEvent<CommonInput>
+    if (!userAcceleration) {
       return
     }
     const boxBody = box.userData.physicsBody
     const force = new Ammo.btVector3(
-      detail.actualAccelerometer.x * 9.8 * 10 * 50,
-      detail.actualAccelerometer.y * 9.8 * 10 * 50,
-      detail.actualAccelerometer.z * 9.8 * 10 * 50
+      userAcceleration.x * 9.8 * 10,
+      userAcceleration.y * 9.8 * 10,
+      userAcceleration.z * 9.8 * 10
     )
-    // console.log(force.length())
+    console.log(userAcceleration)
 
     boxBody.applyCentralForce(force)
   })

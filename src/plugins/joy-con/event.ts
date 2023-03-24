@@ -1,5 +1,7 @@
 import type { CommonInput, CommonQuaternion, CommonVector, JoyConType, LeftButtonStatus, LeftInput } from '@/typings/joy-con'
 import { omit } from 'lodash-es'
+import { Euler, Vector3 } from 'three'
+import { degToRad } from 'three/src/math/MathUtils'
 
 const zeroBias = 0.0125
 const bias = 0.75
@@ -7,7 +9,7 @@ const bias = 0.75
 // the unit vector with values from [-1, 1] with PI/2, covering [-PI/2, PI/2].
 const scale = Math.PI / 2
 /** rps静止阈值，低于此数则视为静止 */
-const minRps = 0.0005
+const minRps = 0.0002
 
 export class JoyConEvent extends EventTarget {
   private buttonStatus: Record<string, boolean> = {}
@@ -30,10 +32,13 @@ export class JoyConEvent extends EventTarget {
   }
 
   private handleSensorData(inputData: LeftInput) {
-    const { actualAccelerometer, actualGyroscope, actualOrientation } = inputData
+    const { actualAccelerometer, actualGyroscope, actualOrientation, accelerometers } = inputData
+    const customOrientation = actualAccelerometer && actualGyroscope ? this.getOrientation(actualAccelerometer, actualGyroscope.rps) : actualOrientation
+    const userAcceleration = this.getUserAcceleration(customOrientation, accelerometers)
     const commonInput: CommonInput = {
       ...omit(inputData, ['buttonStatus']),
-      customOrientation: actualAccelerometer && actualGyroscope ? this.getOrientation(actualAccelerometer, actualGyroscope.rps) : actualOrientation
+      customOrientation,
+      userAcceleration
     }
     this.dispatchEvent(new CustomEvent<CommonInput>('sensor-input', {
       detail: commonInput
@@ -83,6 +88,40 @@ export class JoyConEvent extends EventTarget {
         ((((this.lastValues.alpha * 180) / Math.PI) * 430) % 360).toFixed(6),
       beta: ((-1 * (this.lastValues.beta * 180)) / Math.PI).toFixed(6),
       gamma: ((this.lastValues.gamma * 180) / Math.PI).toFixed(6)
+    }
+  }
+
+  /** 清空joycon朝向信息，相当于设置当前朝向为初始状态 */
+  clearOrientationStatus() {
+    this.lastValues.alpha = 0
+    this.lastValues.beta = 0
+    this.lastValues.gamma = 0
+  }
+
+  private getUserAcceleration(customOrientation: CommonQuaternion<string>, accelerometers: LeftInput['accelerometers']): CommonVector {
+    if (!customOrientation || !accelerometers) {
+      return {
+        x: 0,
+        y: 0,
+        z: 0
+      }
+    }
+
+    const eular = new Euler(
+      degToRad(-Number(customOrientation.alpha)),
+      degToRad(-Number(customOrientation.beta)),
+      degToRad(-Number(customOrientation.gamma)),
+      'ZXY'
+    ) // 逆变换为初始朝向下坐标系的值
+    const { x, y, z } = accelerometers[0]
+    const acc = new Vector3(x.acc, y.acc, z.acc)
+
+    acc.applyEuler(eular)
+
+    return {
+      x: acc.y, // y -> x
+      y: acc.x, // x -> y
+      z: -acc.z - 1 // -z -> z（加上重力影响） // TODO: 重力应该跟设备朝向有关
     }
   }
 

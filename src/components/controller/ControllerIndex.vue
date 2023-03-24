@@ -35,9 +35,10 @@ rightEvent.addEventListener('keydown', (e) => {
   const { detail } = e as CustomEvent<string>
 
   if (detail === 'home') {
-    right.alpha = '0deg'
-    right.beta = '0deg'
-    right.gamma = '0deg'
+    // right.alpha = '0deg'
+    // right.beta = '0deg'
+    // right.gamma = '0deg'
+    rightEvent.clearOrientationStatus()
   }
 })
 
