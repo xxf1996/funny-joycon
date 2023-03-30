@@ -4,6 +4,10 @@
 
 <script lang="ts" setup>
 import type { Quaternion, Vector3 } from 'three'
+import { RGBFormat } from 'three'
+import { AddOperation } from 'three'
+import { MixOperation } from 'three'
+import { TextureLoader } from 'three'
 import { PointLight } from 'three'
 import { AmbientLight, DirectionalLight, MeshPhongMaterial } from 'three'
 import { Clock } from 'three'
@@ -14,6 +18,8 @@ import AmmoInit from '@/plugins/ammo/ammo.wasm'
 import { random } from 'lodash-es'
 import { rightEvent } from '@/plugins/joy-con'
 import type { CommonInput } from '@/typings/joy-con'
+import ballTextureUrl from '@/assets/TennisBallColorMap.jpeg'
+import ballBumpUrl from '@/assets/TennisBallBump.jpeg'
 
 type BodyFunction = (body: any) => void
 
@@ -53,9 +59,9 @@ const control = new OrbitControls(camera, renderer.domElement)
 function loop () {
   const deltaTime = clock.getDelta()
   updatePhysics(deltaTime)
-  checkCollision()
+  // checkCollision()
   control.update()
-  camera.lookAt(box.position)
+  camera.lookAt(ball.position)
   renderer.render(scene, camera)
   requestAnimationFrame(loop)
 }
@@ -133,6 +139,16 @@ function initRoom() {
   back.position.set(0, 0, -sz * 0.5)
   back.receiveShadow = true
   createRigidBody(back, backShape, 0, back.position, back.quaternion)
+
+  // 隔板物体（固定，所以质量为0）
+  const mid = new Mesh(
+    new BoxGeometry(sx, 1.0, 0.1),
+    new MeshPhongMaterial({ color: 0xffcccc, side: DoubleSide })
+  )
+  const midShape = new Ammo.btBoxShape( new Ammo.btVector3(sx * 0.5, 0.3 * 0.5, 0.1 * 0.5) )
+  mid.position.set(0, -sy * 0.5, 0)
+  mid.receiveShadow = true
+  createRigidBody(mid, midShape, 0, mid.position, mid.quaternion)
 }
 
 /**
@@ -210,9 +226,11 @@ function checkCollision() {
 
 function initObject() {
   initRoom()
+  const ballTexture = new TextureLoader().load(ballTextureUrl)
+  const ballBump = new TextureLoader().load(ballBumpUrl)
   ball = new Mesh(
     new SphereGeometry(0.2, 32, 32),
-    new MeshPhongMaterial({ color: 0xFFBA26, side: DoubleSide })
+    new MeshPhongMaterial({ side: DoubleSide, map: ballTexture, bumpMap: ballBump, bumpScale: 0.05, })
   )
   const ballShape = new Ammo.btSphereShape( 0.2 )
   ballShape.setMargin(MARGIN)
@@ -227,7 +245,7 @@ function initObject() {
   boxShape.setMargin(MARGIN)
   box.castShadow = true
 
-  createRigidBody(ball, ballShape, 2, ball.position, ball.quaternion, (ballBody) => {
+  createRigidBody(ball, ballShape, 0.3, ball.position, ball.quaternion, (ballBody) => {
     ballBody.setRestitution(0.95) // 碰撞后补偿系数，系数越大越容易反弹
     ballBody.setLinearVelocity(
       new Ammo.btVector3(3, -5, -12)
@@ -235,6 +253,24 @@ function initObject() {
     console.log(ballBody)
   })
   createRigidBody(box, boxShape, 10, box.position, box.quaternion)
+}
+
+function hitBall(ballBody: any) {
+  ballBody.applyCentralForce(new Ammo.btVector3(
+    random(-100, 100, true),
+    random(50, 150, true),
+    random(-100, 100, true)
+  ))
+}
+
+function resetBall(ballBody: any) {
+  ballBody.applyCentralForce(new Ammo.btVector3(
+    0,
+    random(80, 200, true),
+    0
+  ))
+
+  hitBall(ballBody)
 }
 
 function initEvent() {
@@ -247,11 +283,10 @@ function initEvent() {
 
     switch(e.code) {
     case 'Space':
-      ballBody.applyCentralForce(new Ammo.btVector3(
-        random(-100, 100, true),
-        random(50, 150, true),
-        random(-100, 100, true)
-      ))
+      hitBall(ballBody)
+      break
+    case 'R':
+      resetBall(ballBody)
       break
     case 'ArrowLeft':
       transformAux1.setOrigin(new Ammo.btVector3(boxOrigin.x() - 0.1, boxOrigin.y(), boxOrigin.z()))
@@ -300,6 +335,7 @@ function createRigidBody(object: Mesh, shape: any, mass: number, pos: Vector3, q
   transform.setOrigin( new Ammo.btVector3( pos.x, pos.y, pos.z ) )
   transform.setRotation( new Ammo.btQuaternion( quat.x, quat.y, quat.z, quat.w ) )
   const motionState = new Ammo.btDefaultMotionState( transform )
+  /** 转动惯量 */
   const localInertia = new Ammo.btVector3( 0, 0, 0 )
   shape.calculateLocalInertia( mass, localInertia )
 
@@ -317,9 +353,11 @@ function createRigidBody(object: Mesh, shape: any, mass: number, pos: Vector3, q
 
   scene.add(object)
 
+  // 没有质量不参与刚体运动，但是会有碰撞
   if (mass > 0) {
     rigidBodies.push(object)
     // Disable deactivation
+    // NOTICE: 在刚体运动中，deactivation（去活化）是指在物理引擎中将不再移动的刚体（静止的刚体）从计算中排除的过程。当一个刚体保持静止时，它不需要被计算，因此去除这些刚体可以减少计算开销，提高性能。物理引擎通常通过检查静止刚体的速度和加速度来判断是否需要去活化刚体。如果静止刚体的速度和加速度都很小，那么它们就可以被去活化，直到它们再次受到力或者碰撞等事件的影响而发生运动。(chatGPT)
     body.setActivationState(4)
   }
 

@@ -207,6 +207,16 @@ graph LR;
 
 虽然可以看到里面输出了`wasm`文件，但是这个`wasm`文件不能直接单独引入，否则会报错[^4]；必须要配合`ammo.wasm.js`文件进行使用，即引入`ammo.wasm.js`文件即可自动加载wasm模块，不过由于`ammo.wasm.js`文件本身加载的`wasm`文件是一个相对地址，因此最好将其地址设为一个根目录下的绝对地址，不然无法正确加载`wasm`文件；
 
+
+
+## 资源
+
+### 纹理
+
+- [Free Textures for Basketball, Beach Ball, Pool Balls, Softball, and Tennis Balls.](https://www.robinwood.com/Catalog/FreeStuff/Textures/TexturePages/BallMaps.html)：一些球类的免费纹理贴图
+
+
+
 ## 相关
 
 [redphx/joydance: Use Joy-Cons to play Ubisoft's Just Dance on all platforms](https://github.com/redphx/joydance)：一个基于python的库，原理也是利用HID协议连接joycon获取其数据，并转发到舞力全开软件
