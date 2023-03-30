@@ -4,9 +4,6 @@
 
 <script lang="ts" setup>
 import type { Quaternion, Vector3 } from 'three'
-import { RGBFormat } from 'three'
-import { AddOperation } from 'three'
-import { MixOperation } from 'three'
 import { TextureLoader } from 'three'
 import { PointLight } from 'three'
 import { AmbientLight, DirectionalLight, MeshPhongMaterial } from 'three'
