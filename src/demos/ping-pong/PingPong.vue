@@ -4,6 +4,7 @@
 
 <script lang="ts" setup>
 import type { Quaternion, Vector3 } from 'three'
+import { AxesHelper } from 'three'
 import { TextureLoader } from 'three'
 import { PointLight } from 'three'
 import { AmbientLight, DirectionalLight, MeshPhongMaterial } from 'three'
@@ -17,6 +18,7 @@ import { rightEvent } from '@/plugins/joy-con'
 import type { CommonInput } from '@/typings/joy-con'
 import ballTextureUrl from '@/assets/TennisBallColorMap.jpeg'
 import ballBumpUrl from '@/assets/TennisBallBump.jpeg'
+import { promiseTimeout } from '@vueuse/core'
 
 type BodyFunction = (body: any) => void
 
@@ -24,6 +26,7 @@ const container = ref<HTMLElement>()
 const rigidBodies: Mesh[] = []
 const GRAVITY = -9.8
 const MARGIN = 0.05
+const BALL_RADIUS = 0.2
 let Ammo: any = null
 let physicsWorld: any
 let transformAux1: any
@@ -34,6 +37,10 @@ let prevDistance = Number.MAX_SAFE_INTEGER
 let curDistance = Number.MAX_SAFE_INTEGER
 let collisionCallback: any
 let afterCollision = false
+let canHit = false
+/** z轴方向 */
+// let hitDirection: -1 | 1 = -1
+let falled = false
 
 const camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000)
 const scene = new Scene()
@@ -57,6 +64,7 @@ function loop () {
   const deltaTime = clock.getDelta()
   updatePhysics(deltaTime)
   // checkCollision()
+  checkHitStatus()
   control.update()
   camera.lookAt(ball.position)
   renderer.render(scene, camera)
@@ -142,7 +150,7 @@ function initRoom() {
     new BoxGeometry(sx, 1.0, 0.1),
     new MeshPhongMaterial({ color: 0xffcccc, side: DoubleSide })
   )
-  const midShape = new Ammo.btBoxShape( new Ammo.btVector3(sx * 0.5, 0.3 * 0.5, 0.1 * 0.5) )
+  const midShape = new Ammo.btBoxShape( new Ammo.btVector3(sx * 0.5, 1.0 * 0.5, 0.1 * 0.5) )
   mid.position.set(0, -sy * 0.5, 0)
   mid.receiveShadow = true
   createRigidBody(mid, midShape, 0, mid.position, mid.quaternion)
@@ -221,18 +229,37 @@ function checkCollision() {
   console.log('碰撞', getBallAndFloorDistance())
 }
 
+/** 检测是否处于可击打状态 */
+function checkHitStatus() {
+  curDistance = getBallAndFloorDistance()
+
+  if (curDistance > 0) {
+    return
+  }
+
+  if (falled) {
+    canHit = false
+    return
+  }
+
+  falled = true
+}
+
 function initObject() {
   initRoom()
   const ballTexture = new TextureLoader().load(ballTextureUrl)
   const ballBump = new TextureLoader().load(ballBumpUrl)
   ball = new Mesh(
-    new SphereGeometry(0.2, 32, 32),
+    new SphereGeometry(BALL_RADIUS, 32, 32),
     new MeshPhongMaterial({ side: DoubleSide, map: ballTexture, bumpMap: ballBump, bumpScale: 0.05, })
   )
-  const ballShape = new Ammo.btSphereShape( 0.2 )
+  /** 球体本地坐标系(红色代表 X 轴. 绿色代表 Y 轴. 蓝色代表 Z 轴. )*/
+  const ballAxes = new AxesHelper(BALL_RADIUS * 2)
+  const ballShape = new Ammo.btSphereShape( BALL_RADIUS )
   ballShape.setMargin(MARGIN)
-  ball.position.set(0, -1, 8)
+  ball.position.set(0, -4, 8)
   ball.castShadow = true
+  ball.add(ballAxes)
   box = new Mesh(
     new BoxGeometry(1, 1, 1),
     new MeshPhongMaterial({ color: 0xFF4A26 })
@@ -244,34 +271,51 @@ function initObject() {
 
   createRigidBody(ball, ballShape, 0.3, ball.position, ball.quaternion, (ballBody) => {
     ballBody.setRestitution(0.95) // 碰撞后补偿系数，系数越大越容易反弹
-    ballBody.setLinearVelocity(
-      new Ammo.btVector3(3, -5, -12)
-    )
+    // ballBody.setLinearVelocity(
+    //   new Ammo.btVector3(3, -5, -12)
+    // )
     console.log(ballBody)
   })
   createRigidBody(box, boxShape, 10, box.position, box.quaternion)
 }
 
 function hitBall(ballBody: any) {
+  if (!canHit) {
+    return
+  }
+
+  const hitDirection = ball.position.z > 0 ? -1 : 1
+  const directionForce = random(160, 230, true) * hitDirection
+
+  // TODO: 正确的击打位置应该是面对方向的某个半球区域的表面点，可以结合物体的旋转姿态来获取正确的点
+  // void applyForce([Const, Ref] btVector3 force, [Const, Ref] btVector3 rel_pos);
   ballBody.applyCentralForce(new Ammo.btVector3(
-    random(-100, 100, true),
-    random(50, 150, true),
-    random(-100, 100, true)
+    random(-30, 30, true),
+    random(20, 80, true),
+    directionForce
   ))
+  canHit = false
 }
 
-function resetBall(ballBody: any) {
+async function resetBall(ballBody: any) {
   ballBody.applyCentralForce(new Ammo.btVector3(
     0,
-    random(80, 200, true),
+    random(60, 150, true),
     0
-  ))
+  )) // 向上抛起
+
+  canHit = true
+  falled = false
+
+  console.log('reset')
+
+  await promiseTimeout(200)
 
   hitBall(ballBody)
 }
 
 function initEvent() {
-  window.addEventListener('keydown', e => {
+  window.addEventListener('keyup', e => {
     const ballBody = ball.userData.physicsBody
     const boxBody = box.userData.physicsBody
     const motionState = boxBody.getMotionState()
@@ -282,7 +326,7 @@ function initEvent() {
     case 'Space':
       hitBall(ballBody)
       break
-    case 'R':
+    case 'KeyR':
       resetBall(ballBody)
       break
     case 'ArrowLeft':

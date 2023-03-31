@@ -209,6 +209,14 @@ graph LR;
 
 
 
+### 方法定义
+
+关于`Ammo`暴露的方法可以参考[ammo.js/ammo.idl at main · kripken/ammo.js](https://github.com/kripken/ammo.js/blob/main/ammo.idl)；具体的使用方法问下`chatGPT`也是不错的。
+
+<img src="http://pic.xiexuefeng.cc/markdown/image-20230331154007913.png?imageslim" alt="image-20230331154007913" style="zoom:50%;" />
+
+
+
 ## 资源
 
 ### 纹理
