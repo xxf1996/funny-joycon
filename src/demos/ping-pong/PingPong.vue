@@ -3,7 +3,8 @@
 </template>
 
 <script lang="ts" setup>
-import type { Quaternion, Vector3 } from 'three'
+import type { Quaternion} from 'three'
+import { LineBasicMaterial, Vector3 } from 'three'
 import { AxesHelper } from 'three'
 import { TextureLoader } from 'three'
 import { PointLight } from 'three'
@@ -256,6 +257,7 @@ function initObject() {
   /** 球体本地坐标系(红色代表 X 轴. 绿色代表 Y 轴. 蓝色代表 Z 轴. )*/
   const ballAxes = new AxesHelper(BALL_RADIUS * 2)
   const ballShape = new Ammo.btSphereShape( BALL_RADIUS )
+  // (ballAxes.material as LineBasicMaterial).linewidth = 3 // NOTICE: 由于OpenGL Core Profile与 大多数平台上WebGL渲染器的限制，无论如何设置该值，线宽始终为1。https://threejs.org/docs/?q=LineBasicMaterial#api/zh/materials/LineBasicMaterial.linewidth
   ballShape.setMargin(MARGIN)
   ball.position.set(0, -4, 8)
   ball.castShadow = true
@@ -271,12 +273,29 @@ function initObject() {
 
   createRigidBody(ball, ballShape, 0.3, ball.position, ball.quaternion, (ballBody) => {
     ballBody.setRestitution(0.95) // 碰撞后补偿系数，系数越大越容易反弹
+    ballBody.setDamping(0.1, 0.3) // 设置线速度和角速度相关的阻尼系数
     // ballBody.setLinearVelocity(
     //   new Ammo.btVector3(3, -5, -12)
     // )
     console.log(ballBody)
   })
   createRigidBody(box, boxShape, 10, box.position, box.quaternion)
+}
+
+/**
+ * 获取一球面的击打位置，确保击打位置永远在正面
+ * @param hitDirection 击打方向，即力的z轴方向
+ */
+function getBallHitPosition(hitDirection: -1 | 1) {
+  const phi = random(0, Math.PI * 2, true) // 0 ~ 2π（xy平面）
+  const theta = hitDirection === 1 ? random(Math.PI * 0.5, Math.PI, true) : random(0, Math.PI * 0.5) // 0 ~ π
+  const x = BALL_RADIUS * Math.sin(theta) * Math.cos(phi)
+  const y = BALL_RADIUS * Math.sin(theta) * Math.sin(phi)
+  const z = BALL_RADIUS * Math.cos(theta)
+  const hitPos = new Vector3(x, y, z) // 这里得到的是球在初始状态下的坐标位置（即未发生旋转时正面的某个位置）
+  hitPos.applyQuaternion(ball.quaternion.clone().conjugate()) // 通过逆变换旋转状态，可以把初始状态下的坐标变换到当前旋转状态下的正面
+
+  return hitPos
 }
 
 function hitBall(ballBody: any) {
@@ -286,13 +305,18 @@ function hitBall(ballBody: any) {
 
   const hitDirection = ball.position.z > 0 ? -1 : 1
   const directionForce = random(160, 230, true) * hitDirection
+  const hitPos = getBallHitPosition(hitDirection)
 
-  // TODO: 正确的击打位置应该是面对方向的某个半球区域的表面点，可以结合物体的旋转姿态来获取正确的点
+  // 正确的击打位置应该是面对方向的某个半球区域的表面点，可以结合物体的旋转姿态来获取正确的点
   // void applyForce([Const, Ref] btVector3 force, [Const, Ref] btVector3 rel_pos);
-  ballBody.applyCentralForce(new Ammo.btVector3(
+  ballBody.applyForce(new Ammo.btVector3(
     random(-30, 30, true),
     random(20, 80, true),
     directionForce
+  ), new Ammo.btVector3(
+    hitPos.x,
+    hitPos.y,
+    hitPos.z
   ))
   canHit = false
 }
