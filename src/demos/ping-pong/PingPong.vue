@@ -42,6 +42,7 @@ let canHit = false
 /** z轴方向 */
 // let hitDirection: -1 | 1 = -1
 let falled = false
+let prevAcc = new Vector3(0, 0, 0)
 
 const camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000)
 const scene = new Scene()
@@ -379,15 +380,28 @@ function initEvent() {
     if (!userAcceleration) {
       return
     }
-    const boxBody = box.userData.physicsBody
-    const force = new Ammo.btVector3(
-      userAcceleration.x * 9.8 * 10,
-      userAcceleration.y * 9.8 * 10,
-      userAcceleration.z * 9.8 * 10
-    )
-    console.log(userAcceleration)
+    const curAcc = new Vector3(userAcceleration.x, userAcceleration.y, userAcceleration.z)
+    // const boxBody = box.userData.physicsBody
+    // const force = new Ammo.btVector3(
+    //   userAcceleration.x * 9.8 * 10,
+    //   userAcceleration.y * 9.8 * 10,
+    //   userAcceleration.z * 9.8 * 10
+    // )
+    // console.log(userAcceleration)
 
-    boxBody.applyCentralForce(force)
+    // boxBody.applyCentralForce(force)
+
+    const curLen = curAcc.length()
+    const prevLen = prevAcc.length()
+
+    if (prevLen - curLen > 0.6 && prevLen > 2) {
+      console.log('hit!!!!')
+      prevAcc.set(0, 0, 0)
+    }
+
+    if (curLen > prevLen) {
+      prevAcc = curAcc
+    }
   })
 }
 

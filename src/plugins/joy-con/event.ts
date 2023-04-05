@@ -108,20 +108,30 @@ export class JoyConEvent extends EventTarget {
     }
 
     const eular = new Euler(
-      degToRad(-Number(customOrientation.alpha)),
-      degToRad(-Number(customOrientation.beta)),
-      degToRad(-Number(customOrientation.gamma)),
+      degToRad(Number(customOrientation.alpha)),
+      degToRad(Number(customOrientation.beta)),
+      degToRad(Number(customOrientation.gamma)),
       'ZXY'
-    ) // 逆变换为初始朝向下坐标系的值
+    )
     const { x, y, z } = accelerometers[0]
     const acc = new Vector3(x.acc, y.acc, z.acc)
+    const gravity = new Vector3(0, 0, 1) // 静止状态&初始朝向，-z轴有一个g的加速度用于抵消重力加速度，所以这里给一个相反的加速度来抵消重力加速度影响
 
-    acc.applyEuler(eular)
+    // FIXME: 重力消除在某些姿势下表现不对（尤其是设备y轴）
+    gravity.applyEuler(eular) // 重力应该跟设备朝向有关
+    acc.add(gravity) // 抵消当前朝向下的重力加速度影响
+    eular.set(
+      -eular.x,
+      -eular.y,
+      -eular.z,
+      'ZXY'
+    )
+    acc.applyEuler(eular) // 逆变换为初始朝向下坐标系的值
 
     return {
       x: acc.y, // y -> x
       y: acc.x, // x -> y
-      z: -acc.z - 1 // -z -> z（加上重力影响） // TODO: 重力应该跟设备朝向有关
+      z: -acc.z // -z -> z
     }
   }
 

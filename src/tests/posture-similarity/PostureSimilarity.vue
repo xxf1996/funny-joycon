@@ -43,8 +43,7 @@ import type { TooltipComponentOption, GridComponentOption, LegendComponentOption
 import { TooltipComponent, GridComponent, LegendComponent } from 'echarts/components'
 import { SVGRenderer } from 'echarts/renderers'
 import { map, pick } from 'lodash-es'
-import { Euler, Vector3 } from 'three'
-import { degToRad } from 'three/src/math/MathUtils'
+import { Vector3 } from 'three'
 
 type ECOption = echarts.ComposeOption<LineSeriesOption | TooltipComponentOption | GridComponentOption | LegendComponentOption>
 
@@ -127,20 +126,21 @@ const similarity = reactive({
 const no = ref(0)
 const started = ref(false)
 let curRecord: CommonVector[] = []
+let customRecord: CommonVector[] = []
 
 function toggleStart() {
   if (!started.value) {
     no.value += 1
     curRecord = []
+    customRecord = []
   } else {
     computeSimilarity()
     lines[0].data = map(curRecord, 'x').map((val, idx) => [idx, val])
     lines[1].data = map(curRecord, 'y').map((val, idx) => [idx, val])
     lines[2].data = map(curRecord, 'z').map((val, idx) => [idx, val])
-    // 用户坐标系：右手为x轴，正前方为y轴，头顶为z轴
-    lines[3].data = lines[1].data!.slice(0) // y -> x
-    lines[4].data = lines[0].data!.slice(0) // x -> y
-    lines[5].data = lines[2].data!.map((val: any) => [val[0], -val[1] - 1]) // -z -> z（加上重力影响）
+    lines[3].data = map(customRecord, 'x').map((val, idx) => [idx, val])
+    lines[4].data = map(customRecord, 'y').map((val, idx) => [idx, val])
+    lines[5].data = map(customRecord, 'z').map((val, idx) => [idx, val])
     chartInstance?.setOption<ECOption>({
       series: lines
     })
@@ -161,23 +161,13 @@ rightEvent.addEventListener('sensor-input', e => {
   if (!started.value) {
     return
   }
-  const { detail } = e as CustomEvent<CommonInput>
-  const { customOrientation } = detail
-  const euler = customOrientation
-    ? new Euler(
-      degToRad(-Number(customOrientation.alpha)),
-      degToRad(-Number(customOrientation.beta)),
-      degToRad(-Number(customOrientation.gamma)),
-      'ZXY'
-    ) // 将逆变换为初始朝向下坐标系的值
-    : new Euler()
-  curRecord.push(...detail.accelerometers.map(({ x, y, z }) => {
+  const { detail: { accelerometers = [], userAcceleration } } = e as CustomEvent<CommonInput>
+  curRecord.push(...accelerometers.slice(0, 1).map(({ x, y, z }) => {
     const acc = new Vector3(x.acc, y.acc, z.acc)
-
-    acc.applyEuler(euler)
     
     return pick(acc, ['x', 'y', 'z'])
   }))
+  customRecord.push(userAcceleration)
   // const { rps } = detail.actualGyroscope
   // curRecord.push(rps)
 })
