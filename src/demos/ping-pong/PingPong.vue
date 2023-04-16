@@ -14,7 +14,7 @@ import { BoxGeometry} from 'three'
 import { DoubleSide, Mesh, PerspectiveCamera, Scene, SphereGeometry, WebGLRenderer } from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import AmmoInit from '@/plugins/ammo/ammo.wasm'
-import { random } from 'lodash-es'
+import { debounce, random, throttle } from 'lodash-es'
 import { rightEvent } from '@/plugins/joy-con'
 import type { CommonInput } from '@/typings/joy-con'
 import ballTextureUrl from '@/assets/TennisBallColorMap.jpeg'
@@ -28,6 +28,9 @@ const rigidBodies: Mesh[] = []
 const GRAVITY = -9.8
 const MARGIN = 0.05
 const BALL_RADIUS = 0.2
+/** 连续两次击打之间的最小时间差（毫秒） */
+const MIN_HIT_DURATION = 500
+
 let Ammo: any = null
 let physicsWorld: any
 let transformAux1: any
@@ -43,6 +46,7 @@ let canHit = false
 // let hitDirection: -1 | 1 = -1
 let falled = false
 let prevAcc = new Vector3(0, 0, 0)
+let prevHitTime = 0
 
 const camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000)
 const scene = new Scene()
@@ -322,6 +326,20 @@ function hitBall(ballBody: any) {
   canHit = false
 }
 
+function hitTest(userAcceleration: CommonInput['userAcceleration']) {
+  prevHitTime = Date.now()
+  const ballBody = ball.userData.physicsBody
+  // TODO: 将加速度转为世界坐标系（固定视角）下的力
+  const force = new Ammo.btVector3(
+    userAcceleration.x * 9.8 * 3,
+    userAcceleration.y * 9.8 * 3,
+    userAcceleration.z * 9.8 * 3
+  )
+  console.log(userAcceleration)
+
+  ballBody.applyCentralForce(force)
+}
+
 async function resetBall(ballBody: any) {
   ballBody.applyCentralForce(new Ammo.btVector3(
     0,
@@ -375,27 +393,30 @@ function initEvent() {
     }
   })
 
+  /**
+   * 击打动作检测
+   * 
+   * 一个典型的击打动作就是一次加速然后减速接近为0的过程；对应到加速度曲线就是（以击打方向为正）先加速度增长然后降为负向的，有点类似于sin曲线的一个周期。
+   */
   rightEvent.addEventListener('sensor-input', e => {
     const { detail: { userAcceleration } } = e as CustomEvent<CommonInput>
     if (!userAcceleration) {
       return
     }
-    const curAcc = new Vector3(userAcceleration.x, userAcceleration.y, userAcceleration.z)
-    // const boxBody = box.userData.physicsBody
-    // const force = new Ammo.btVector3(
-    //   userAcceleration.x * 9.8 * 10,
-    //   userAcceleration.y * 9.8 * 10,
-    //   userAcceleration.z * 9.8 * 10
-    // )
-    // console.log(userAcceleration)
 
-    // boxBody.applyCentralForce(force)
+    const curTime = Date.now()
+    // 确保两次击打之间的间隔不要太近，同时也会过滤掉击打时加速度过大而导致的误认为击打（因为加速度下降后也会超过阈值，导致连续击打）的情况
+    if (curTime - prevHitTime < MIN_HIT_DURATION) {
+      return
+    }
+
+    const curAcc = new Vector3(userAcceleration.x, userAcceleration.y, userAcceleration.z)
 
     const curLen = curAcc.length()
     const prevLen = prevAcc.length()
 
-    if (prevLen - curLen > 0.6 && prevLen > 2) {
-      console.log('hit!!!!')
+    if (prevLen - curLen > 0.6 && prevLen > 3) {
+      hitTest(userAcceleration)
       prevAcc.set(0, 0, 0)
     }
 
