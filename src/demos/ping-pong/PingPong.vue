@@ -4,6 +4,8 @@
 
 <script lang="ts" setup>
 import type { Quaternion} from 'three'
+import { Euler} from 'three'
+import { ArrowHelper} from 'three'
 import { LineBasicMaterial, Vector3 } from 'three'
 import { AxesHelper } from 'three'
 import { TextureLoader } from 'three'
@@ -20,6 +22,7 @@ import type { CommonInput } from '@/typings/joy-con'
 import ballTextureUrl from '@/assets/TennisBallColorMap.jpeg'
 import ballBumpUrl from '@/assets/TennisBallBump.jpeg'
 import { promiseTimeout } from '@vueuse/core'
+import { degToRad } from 'three/src/math/MathUtils'
 
 type BodyFunction = (body: any) => void
 
@@ -55,14 +58,17 @@ const renderer = new WebGLRenderer({ antialias: true })
 const sun = new DirectionalLight(0xffffff, 0.7)
 const light = new PointLight(0xffffff, 1.0, 50)
 const ambient = new AmbientLight(0xffffff, 0.1)
+const forceArrow = new ArrowHelper(undefined, new Vector3(0, 1, 10), 0.5)
+forceArrow.setColor(0xff3366)
+forceArrow.scale.setScalar(3)
 renderer.setSize(window.innerWidth, window.innerHeight)
 renderer.shadowMap.enabled = true
 camera.lookAt(0, 0, 0)
-camera.position.set(0, 0, 10)
+camera.position.set(0, 1, 20)
 light.position.set(0, 0, 5)
 light.castShadow = true
 sun.position.set(10, 10, 10)
-scene.add(sun, light, ambient)
+scene.add(sun, light, ambient, forceArrow)
 
 const control = new OrbitControls(camera, renderer.domElement)
 
@@ -72,7 +78,7 @@ function loop () {
   // checkCollision()
   checkHitStatus()
   control.update()
-  camera.lookAt(ball.position)
+  // camera.lookAt(ball.position)
   renderer.render(scene, camera)
   requestAnimationFrame(loop)
 }
@@ -276,8 +282,8 @@ function initObject() {
   boxShape.setMargin(MARGIN)
   box.castShadow = true
 
-  createRigidBody(ball, ballShape, 0.3, ball.position, ball.quaternion, (ballBody) => {
-    ballBody.setRestitution(0.95) // 碰撞后补偿系数，系数越大越容易反弹
+  createRigidBody(ball, ballShape, 0.5, ball.position, ball.quaternion, (ballBody) => {
+    ballBody.setRestitution(0.85) // 碰撞后补偿系数，系数越大越容易反弹
     ballBody.setDamping(0.1, 0.3) // 设置线速度和角速度相关的阻尼系数
     // ballBody.setLinearVelocity(
     //   new Ammo.btVector3(3, -5, -12)
@@ -326,16 +332,29 @@ function hitBall(ballBody: any) {
   canHit = false
 }
 
-function hitTest(userAcceleration: CommonInput['userAcceleration']) {
+function hitTest(userAcceleration: CommonInput['userAcceleration'], customOrientation: CommonInput['customOrientation']) {
   prevHitTime = Date.now()
   const ballBody = ball.userData.physicsBody
-  // TODO: 将加速度转为世界坐标系（固定视角）下的力
-  const force = new Ammo.btVector3(
-    userAcceleration.x * 9.8 * 3,
-    userAcceleration.y * 9.8 * 3,
-    userAcceleration.z * 9.8 * 3
+  // 将加速度转为世界坐标系（固定视角）下的力
+  // 目前情况下基于坐标系的转换误差有点大，可以假设所有的击打都是基于当前设备的朝向方向，然后获取一下加速度计的强度，基于朝向和强度构建一个力？（感觉朝向的数据还是相对准确的？）
+  // FIXME: 有些朝向好像有点偏，主要是z轴（世界坐标系），y轴的朝下完全不起作用；
+  const basicDir = new Vector3(0, 1, 0)
+  const eular = new Euler(
+    degToRad(Number(customOrientation.alpha)),
+    degToRad(Number(customOrientation.beta)),
+    degToRad(-Number(customOrientation.gamma)),
+    'ZXY'
   )
-  console.log(userAcceleration)
+  const acc = new Vector3(userAcceleration.x, userAcceleration.y, userAcceleration.z)
+  basicDir.applyEuler(eular)
+  forceArrow.setDirection(basicDir)
+  basicDir.normalize().multiplyScalar(acc.length())
+
+  const force = new Ammo.btVector3(
+    basicDir.x * 9.8 * 5,
+    basicDir.y * 9.8 * 5,
+    basicDir.z * 9.8 * 5
+  )
 
   ballBody.applyCentralForce(force)
 }
@@ -399,7 +418,7 @@ function initEvent() {
    * 一个典型的击打动作就是一次加速然后减速接近为0的过程；对应到加速度曲线就是（以击打方向为正）先加速度增长然后降为负向的，有点类似于sin曲线的一个周期。
    */
   rightEvent.addEventListener('sensor-input', e => {
-    const { detail: { userAcceleration } } = e as CustomEvent<CommonInput>
+    const { detail: { userAcceleration, customOrientation } } = e as CustomEvent<CommonInput>
     if (!userAcceleration) {
       return
     }
@@ -416,7 +435,7 @@ function initEvent() {
     const prevLen = prevAcc.length()
 
     if (prevLen - curLen > 0.6 && prevLen > 3) {
-      hitTest(userAcceleration)
+      hitTest(userAcceleration, customOrientation)
       prevAcc.set(0, 0, 0)
     }
 
