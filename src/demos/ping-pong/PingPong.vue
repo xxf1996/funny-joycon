@@ -342,7 +342,7 @@ function hitTest(userAcceleration: CommonInput['userAcceleration'], customOrient
   const eular = new Euler(
     degToRad(Number(customOrientation.alpha)),
     degToRad(Number(customOrientation.beta)),
-    degToRad(-Number(customOrientation.gamma)),
+    degToRad(-Number(customOrientation.gamma)),  // 因为发现X轴跟实际相反，所以取负
     'ZXY'
   )
   const acc = new Vector3(userAcceleration.x, userAcceleration.y, userAcceleration.z)
