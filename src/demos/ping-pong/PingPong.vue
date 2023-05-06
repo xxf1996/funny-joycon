@@ -4,6 +4,7 @@
 
 <script lang="ts" setup>
 import type { Quaternion} from 'three'
+import { AudioListener, AudioLoader, PositionalAudio} from 'three'
 import { Euler} from 'three'
 import { ArrowHelper} from 'three'
 import { LineBasicMaterial, Vector3 } from 'three'
@@ -21,6 +22,7 @@ import { rightEvent } from '@/plugins/joy-con'
 import type { CommonInput } from '@/typings/joy-con'
 import ballTextureUrl from '@/assets/TennisBallColorMap.jpeg'
 import ballBumpUrl from '@/assets/TennisBallBump.jpeg'
+import hitSoundUrl from '@/assets/audio/tennis.mp3'
 import { promiseTimeout } from '@vueuse/core'
 import { degToRad } from 'three/src/math/MathUtils'
 
@@ -29,7 +31,7 @@ type BodyFunction = (body: any) => void
 const container = ref<HTMLElement>()
 const rigidBodies: Mesh[] = []
 const GRAVITY = -9.8
-const MARGIN = 0.05
+const MARGIN = 0.15
 const BALL_RADIUS = 0.2
 /** 连续两次击打之间的最小时间差（毫秒） */
 const MIN_HIT_DURATION = 500
@@ -59,6 +61,16 @@ const sun = new DirectionalLight(0xffffff, 0.7)
 const light = new PointLight(0xffffff, 1.0, 50)
 const ambient = new AmbientLight(0xffffff, 0.1)
 const forceArrow = new ArrowHelper(undefined, new Vector3(0, 1, 10), 0.5)
+const listener = new AudioListener()
+const tennisHitSound = new PositionalAudio(listener)
+const audioLoader = new AudioLoader()
+
+camera.add(listener)
+audioLoader.load(hitSoundUrl, (buffer) => {
+  tennisHitSound.setBuffer(buffer)
+  tennisHitSound.setRefDistance(8)
+})
+
 forceArrow.setColor(0xff3366)
 forceArrow.scale.setScalar(3)
 renderer.setSize(window.innerWidth, window.innerHeight)
@@ -272,7 +284,7 @@ function initObject() {
   ballShape.setMargin(MARGIN)
   ball.position.set(0, -4, 8)
   ball.castShadow = true
-  ball.add(ballAxes)
+  ball.add(ballAxes, tennisHitSound)
   box = new Mesh(
     new BoxGeometry(1, 1, 1),
     new MeshPhongMaterial({ color: 0xFF4A26 })
@@ -282,9 +294,9 @@ function initObject() {
   boxShape.setMargin(MARGIN)
   box.castShadow = true
 
-  createRigidBody(ball, ballShape, 0.5, ball.position, ball.quaternion, (ballBody) => {
+  createRigidBody(ball, ballShape, 2, ball.position, ball.quaternion, (ballBody) => {
     ballBody.setRestitution(0.85) // 碰撞后补偿系数，系数越大越容易反弹
-    ballBody.setDamping(0.1, 0.3) // 设置线速度和角速度相关的阻尼系数
+    ballBody.setDamping(0.15, 0.2) // 设置线速度和角速度相关的阻尼系数
     // ballBody.setLinearVelocity(
     //   new Ammo.btVector3(3, -5, -12)
     // )
@@ -351,11 +363,13 @@ function hitTest(userAcceleration: CommonInput['userAcceleration'], customOrient
   basicDir.normalize().multiplyScalar(acc.length())
 
   const force = new Ammo.btVector3(
-    basicDir.x * 9.8 * 5,
-    basicDir.y * 9.8 * 5,
-    basicDir.z * 9.8 * 5
+    basicDir.x * 9.8 * 20,
+    basicDir.y * 9.8 * 20,
+    basicDir.z * 9.8 * 20
   )
 
+  tennisHitSound.play()
+  console.log(tennisHitSound.isPlaying)
   ballBody.applyCentralForce(force)
 }
 
