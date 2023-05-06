@@ -225,6 +225,13 @@ graph LR;
 
 
 
+### 音效
+
+- [打网球出球的声音_站长素材](https://sc.chinaz.com/yinxiao/180502304952.htm)
+- [Three 之 three.js （webgl）基础 音频的加载与播放的简单整理_three.js 音频播放_仙魁XAN的博客-CSDN博客](https://blog.csdn.net/u014361280/article/details/124462349)
+
+
+
 ## 相关
 
 [redphx/joydance: Use Joy-Cons to play Ubisoft's Just Dance on all platforms](https://github.com/redphx/joydance)：一个基于python的库，原理也是利用HID协议连接joycon获取其数据，并转发到舞力全开软件
