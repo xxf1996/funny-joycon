@@ -3,6 +3,7 @@ import { JoyConEvent } from './event'
 
 const LEFT_NAME = 'Joy-Con (L)'
 const RIGHT_NAME = 'Joy-Con (R)'
+const WIN_NAME = 'Wireless Gamepad' // 不知道为啥windows chrome显示的设备名是这个
 export const leftConnected = ref(false)
 export const rightConnected = ref(false)
 export const leftEvent = new JoyConEvent('left')
@@ -34,7 +35,7 @@ export async function checkJoyCon() {
       joyCon.addEventListener('hidinput', leftEvent.handleEvent.bind(leftEvent))
     }
 
-    if (productName === RIGHT_NAME) {
+    if (productName === RIGHT_NAME || productName === WIN_NAME) {
       rightConnected.value = true
       // Listen for HID input reports.
       joyCon.addEventListener('hidinput', rightEvent.handleEvent.bind(rightEvent))
